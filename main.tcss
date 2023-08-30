@@ -1,0 +1,13 @@
+Button {
+  margin: 1;
+}
+
+Field {
+  border: round darkcyan;
+  padding: 1;
+  margin: 1;
+}
+
+.type-input {
+  width: 50%;
+}
