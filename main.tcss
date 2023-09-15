@@ -1,13 +1,55 @@
+Screen {
+}
+
 Button {
   margin: 1;
 }
 
-Field {
+Domain {
   border: round darkcyan;
+  padding: 1;
+  height: 28;
+}
+
+.title {
+  margin: 1;
+}
+
+.domain-input-container {
+  margin: 0;
+  padding: 0;
+}
+
+RadioSet {
+  margin: 0;
+  padding: 0;
+}
+
+.domain-input {
+  width: 45;
+}
+
+CustomTypes {
+  border: round darkcyan;
+  padding: 1;
+}
+
+Field {
+  border: round gray;
   padding: 1;
   margin: 1;
 }
 
 .type-input {
-  width: 50%;
+  width: 45;
 }
+
+.output-container {
+  border: round gray;
+  margin-left: 1;
+}
+
+.output-body {
+  padding: 1;
+}
+
