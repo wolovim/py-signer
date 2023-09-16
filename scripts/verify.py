@@ -1,9 +1,8 @@
 import click
-import json
 from ape.cli import NetworkBoundCommand, network_option
 from ape import project, accounts
 from eth_account import Account
-from .utils import signable_msg
+from eth_account.messages import encode_typed_data
 from hexbytes import HexBytes
 
 
@@ -19,42 +18,70 @@ def cli(network):
 
     # deploy the contract
     contract = user1.deploy(project.Verify)
-    print("Contract address: ", contract.address)
 
-    # parse the ABI
-    contract_abi = json.loads(contract.contract_type.json())["abi"]
+    domain_data = {
+        "name": "Ether Mail",
+        "version": "1",
+        "chainId": 31337,  # Foundry
+        "verifyingContract": contract.address,
+        # "salt": b"decafbeef",
+    }
 
-    print(f"CONTRACT_ADDRESS='{contract.address}'")
-    print(f"CONTRACT_ABI='{contract_abi}'")
+    # custom types
+    msg_types = {
+        "Person": [
+            {"name": "name", "type": "string"},
+            {"name": "wallet", "type": "address"},
+        ],
+        "Mail": [
+            {"name": "from", "type": "Person"},
+            {"name": "to", "type": "Person"},
+            {"name": "contents", "type": "string"},
+        ],
+    }
+
+    # the data to be signed
+    msg_data = {
+        "from": {
+            "name": "Cow",
+            "wallet": "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826",
+        },
+        "to": {
+            "name": "Bob",
+            "wallet": "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB",
+        },
+        "contents": "Hello, Bob!",
+    }
+
+    signable_msg = encode_typed_data(domain_data, msg_types, msg_data)
+    print("signable_msg: ", signable_msg)
 
     # user2 signs a message
     user2_pk = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
     signed_msg = Account.sign_message(signable_msg, user2_pk)
-    print("Signed message: ", signed_msg.messageHash)
+    print("Signed message hash: ", signed_msg.messageHash)
 
     # verify the message signer in python
-    print("\nVerifying message via eth-account...")
-    signer = Account.recover_message(signable_msg, signature=signed_msg.signature)
-    assert signer == user2.address
+    print("\nVerifying signer via eth-account...")
+    msg_signer = Account.recover_message(signable_msg, signature=signed_msg.signature)
+    assert msg_signer == user2.address
     print("Success!")
 
-    # verify the message signer in the contract
-    print("\nVerifying message via smart contract...")
-    verified = contract.verifyMessage(
-        user2.address, signed_msg.messageHash, signed_msg.v, signed_msg.r, signed_msg.s
+    # Ape/web3.py can't handle dicts; convert to tuple:
+    msg_tuple = (
+        ("Cow", "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"),
+        ("Bob", "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"),
+        "Hello, Bob!",
     )
-    assert verified
+
+    # verify the message signer + domain in the contract
+    print("\nVerifying signer and domain via smart contract...")
+    signer_712 = contract.recoverAddress(msg_tuple, signed_msg.signature)
+    assert signer_712 == user2.address
     print("Success!")
 
-    # TODO: use OpenZeppelin utils to verify signer and domain
-    #
-
-    ## Bonus: EIP-5267 specifies how contracts can advertise what domain fields they support
-    # https://eips.ethereum.org/EIPS/eip-5267
-    # Motivation: "Notably, EIP-712 does not specify any way for contracts to publish which
-    #   of these fields they use or with what values. This has likely limited adoption of
-    #   EIP-712, as it is not possible to develop general integrations, and instead
-    #   applications find that they need to build custom support for each EIP-712 domain."
+    # Bonus: EIP-5267 specifies how contracts can advertise what domain fields
+    # they support, now part of 712 util https://eips.ethereum.org/EIPS/eip-5267
     print("\nReading supported EIP-712 domain fields...")
     domain = contract.eip712Domain()
     assert domain["fields"] == HexBytes("0x0f")
