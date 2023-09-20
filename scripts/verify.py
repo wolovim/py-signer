@@ -27,7 +27,6 @@ def cli(network):
         # "salt": b"decafbeef",
     }
 
-    # custom types
     msg_types = {
         "Person": [
             {"name": "name", "type": "string"},
@@ -40,7 +39,6 @@ def cli(network):
         ],
     }
 
-    # the data to be signed
     msg_data = {
         "from": {
             "name": "Cow",
@@ -67,24 +65,25 @@ def cli(network):
     assert msg_signer == user2.address
     print("Success!")
 
-    # Ape/web3.py can't handle dicts; convert to tuple:
-    msg_tuple = (
-        ("Cow", "0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826"),
-        ("Bob", "0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB"),
-        "Hello, Bob!",
+    # Ape/web3.py can't handle dicts; convert values to tuple:
+    msg_data_tuple = (
+        (msg_data["from"]["name"], msg_data["from"]["wallet"]),
+        (msg_data["to"]["name"], msg_data["to"]["wallet"]),
+        msg_data["contents"],
     )
 
     # verify the message signer + domain in the contract
     print("\nVerifying signer and domain via smart contract...")
-    signer_712 = contract.recoverAddress(msg_tuple, signed_msg.signature)
+    signer_712 = contract.recoverAddress(msg_data_tuple, signed_msg.signature)
     assert signer_712 == user2.address
     print("Success!")
 
-    # Bonus: EIP-5267 specifies how contracts can advertise what domain fields
-    # they support, now part of 712 util https://eips.ethereum.org/EIPS/eip-5267
+    # EIP-5267 specifies how contracts can advertise what domain fields
+    # they support and is part of OpenZeppelin's 712 util library
+    # https://eips.ethereum.org/EIPS/eip-5267
     print("\nReading supported EIP-712 domain fields...")
     domain = contract.eip712Domain()
-    assert domain["fields"] == HexBytes("0x0f")
+    assert domain["fields"] == HexBytes("0x0f")  # bitmap of supported fields
     assert domain["name"] == "Ether Mail"
     assert domain["version"] == "1"
     assert domain["chainId"] == 31337  # foundry chain id
@@ -92,5 +91,5 @@ def cli(network):
     assert domain["salt"] == HexBytes(
         "0x0000000000000000000000000000000000000000000000000000000000000000"
     )
-    assert domain["extensions"] == []
+    assert domain["extensions"] == []  # list of supported extension EIP numbers
     print("Success!")
