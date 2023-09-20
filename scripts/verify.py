@@ -17,7 +17,7 @@ def cli(network):
     user2 = accounts.test_accounts[1]
 
     # deploy the contract
-    contract = user1.deploy(project.Verify)
+    contract = user1.deploy(project.Verifier)
 
     domain_data = {
         "name": "Ether Mail",
@@ -54,12 +54,12 @@ def cli(network):
     signable_msg = encode_typed_data(domain_data, msg_types, msg_data)
     print("signable_msg: ", signable_msg)
 
-    # user2 signs a message
+    # user2 signs a message; PK taken from Anvil terminal output
     user2_pk = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
     signed_msg = Account.sign_message(signable_msg, user2_pk)
     print("Signed message hash: ", signed_msg.messageHash)
 
-    # verify the message signer in python
+    # verify the message signer in python - note: no domain verification here
     print("\nVerifying signer via eth-account...")
     msg_signer = Account.recover_message(signable_msg, signature=signed_msg.signature)
     assert msg_signer == user2.address

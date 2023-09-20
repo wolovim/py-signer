@@ -5,7 +5,7 @@ pragma solidity ^0.8.21;
 import {EIP712} from "@openzeppelin/utils/cryptography/EIP712.sol";
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 
-contract Verify is EIP712 {
+contract Verifier is EIP712 {
     struct Person {
         string name;
         address wallet;
@@ -28,8 +28,8 @@ contract Verify is EIP712 {
     // OZ EIP712 sets verifyingContract and chainId
     constructor() EIP712("Ether Mail", "1") {}
     
-    function hashString(string calldata source) private pure returns (bytes32) {
-      return keccak256(bytes(source));
+    function hashString(string calldata _source) private pure returns (bytes32) {
+      return keccak256(bytes(_source));
     }
     
     function hashPerson(Person calldata _person) private pure returns (bytes32) {
