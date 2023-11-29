@@ -10,7 +10,7 @@ from hexbytes import HexBytes
 @network_option()
 def cli(network):
     if "foundry" not in network:
-        raise click.ClickException("This script is only for the foundry network")
+        raise click.ClickException("This script is only for the Foundry network")
 
     # set up accounts
     user1 = accounts.test_accounts[0]
@@ -22,7 +22,7 @@ def cli(network):
     domain_data = {
         "name": "Ether Mail",
         "version": "1",
-        "chainId": 31337,  # Foundry
+        "chainId": 31337,  # Foundry/Anvil
         "verifyingContract": contract.address,
         # "salt": b"decafbeef",
     }
@@ -51,13 +51,16 @@ def cli(network):
         "contents": "Hello, Bob!",
     }
 
-    signable_msg = encode_typed_data(domain_data, msg_types, msg_data)
-    print("signable_msg: ", signable_msg)
-
     # user2 signs a message; PK taken from Anvil terminal output
+    # (( note: store your keys securely! this is only for demo purposes ))
     user2_pk = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
-    signed_msg = Account.sign_message(signable_msg, user2_pk)
-    print("Signed message hash: ", signed_msg.messageHash)
+
+    # encode + sign in two steps:
+    signable_msg = encode_typed_data(domain_data, msg_types, msg_data)
+    # signed_msg = Account.sign_message(signable_msg, user2_pk)
+
+    # or one step combined:
+    signed_msg = Account.sign_typed_data(user2_pk, domain_data, msg_types, msg_data)
 
     # verify the message signer in python - note: no domain verification here
     print("\nVerifying signer via eth-account...")
@@ -86,7 +89,7 @@ def cli(network):
     assert domain["fields"] == HexBytes("0x0f")  # bitmap of supported fields
     assert domain["name"] == "Ether Mail"
     assert domain["version"] == "1"
-    assert domain["chainId"] == 31337  # foundry chain id
+    assert domain["chainId"] == 31337  # Anvil chain id
     assert domain["verifyingContract"] == contract.address
     assert domain["salt"] == HexBytes(
         "0x0000000000000000000000000000000000000000000000000000000000000000"

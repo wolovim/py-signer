@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.21;
 
-// Note: ERC-5267 "Retrieval of EIP-712 domain" baked into 712:
+// Note: ERC-5267 "Retrieval of EIP-712 domain" baked into OZ's EIP712:
 import {EIP712} from "@openzeppelin/utils/cryptography/EIP712.sol";
 import {ECDSA} from "@openzeppelin/utils/cryptography/ECDSA.sol";
 
