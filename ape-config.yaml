@@ -2,7 +2,7 @@ name: py-signer
 
 plugins:
   - name: solidity
-    version: 0.8.20
+    version: 0.6.11
   - name: foundry
 
 dependencies:
@@ -11,7 +11,7 @@ dependencies:
     version: 4.9.3
 
 solidity:
-  version: 0.8.21
+  version: 0.8.23
   import_remapping:
     - "@openzeppelin/=OpenZeppelin/4.9.3"
 
